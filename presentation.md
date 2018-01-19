@@ -120,16 +120,25 @@ Poison the branch predictor for indirect branches. Requires exact knowledge of t
 
 Probably more ways to trigger speculation exist and probably more side-channels to exfiltrate data too.
 
-## Papers/Posts
+## References
+
+### Papers
 
 * [Meltdown](https://arxiv.org/abs/1801.01207)
 * [Spectre](https://arxiv.org/abs/1801.01203)
+
+Previous Work:
+
+* [Jump Over ASLR: Attacking Branch Predictors to Bypass ASLR](http://www.cs.binghamton.edu/~dima/micro16.pdf)
+
+### Posts
+
 * [spectreattack.com](https://spectreattack.com/)
 * Jann Horn, Project Zero, [Reading privileged memory with a side-channel](https://googleprojectzero.blogspot.com/2018/01/reading-privileged-memory-with-side.html)
 * [Some thoughts on Spectre and Meltdown](http://www.daemonology.net/blog/2018-01-17-some-thoughts-on-spectre-and-meltdown.html) by Colin Percival
+* [Spectre & Meltdown: tapping into the CPU's subconscious thoughts](https://ds9a.nl/articles/posts/spectre-meltdown/)
 
-
-## Talks
+### Talks
 
 * J. Horn (Project Zero), RealWorldCrypto '18: [Spectre and Meltdown: Data leaks during speculative execution](https://www.youtube.com/watch?v=AFWgIAgMtiA)
 
@@ -137,6 +146,7 @@ Probably more ways to trigger speculation exist and probably more side-channels 
 
 * [Webkit](https://webkit.org/blog/8048/what-spectre-and-meltdown-mean-for-webkit/) array index masking and pointer poisoning.
 * [Firefox](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) disable SharedArrayBuffer and lower timer precision.
+* [Linux](http://kroah.com/log/blog/2018/01/19/meltdown-status-2/)
 * "End users and systems administrators should check with their operating system vendors and system manufacturers, and apply any updates as soon as they are available" [intel](https://web.archive.org/web/20180119041316/https://www.intel.com/content/www/us/en/architecture-and-technology/facts-about-side-channel-analysis-and-intel-products.html)
 * "The latest microcode_ctl and linux-firmware packages from Red Hat do not include resolutions to the CVE-2017-5715 (variant 2) exploit. Red Hat is no longer providing microcode to address Spectre, variant 2, due to instabilities introduced that are causing customer systems to not boot. [...] Customers are advised to contact their silicon vendor to get the latest microcode for their particular processor." [redhat](https://web.archive.org/web/20180119205832/https://access.redhat.com/solutions/3315431?sc_cid=701f2000000tsLNAAY&)
 * Open Hardware?
