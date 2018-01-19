@@ -67,11 +67,43 @@ CPU stalled to load `x` for several 100 cycles. Branch predictor says, branch to
 
 Problem: The transient instructions *are* executed. While at the architectural level their effects are reverted, we can observe their execution via side channels.
 
+```
+                      speculation
+
+                /                    \
+              /                        \
+
+    transient    -| side channel |->     actual
+```
+
+
 ## Rough classification
 
 * Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
 * Spectre 1: Branch predictor allows transient execution of the wrong branch.
 * Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
+
+### Meltdown
+
+Only affects Intel CPUs.
+
+[Virtual memory](http://www.plantation-productions.com/Webster/www.artofasm.com/Linux/HTML/MemoryArchitecturea3.html) is organized in pages. A page is a continuous region of virtual address space and can be backed by physical memory. Page information is stored in the OS in a tree like structure, called page table tree.
+A page has ACL bits, for example it can be Readable, Writeable, Executable. Pages can also be protected, eg. only accessible to the OS or the sanbox implementation.
+
+Normally every process in a system has it's own virtual memory. When switching between processes the OS loads a different page table to the Memory Management Unit (MMU). However the OS internal memory is traditionally mapped into the process address space, but marked protected. This is to avoid switching the page table (which is expensive) on syscalls.
+
+Translating a virtual memory address to a physical one requires several steps and the loading of several page table entries from memory. For perfomance ther is a Translation Lookaside Buffer (TLB) that remembers recently used mappings. If the page table entry is evicted from memory, but the actual mapping is in the TLB, intel CPUs perform a speculative load, even though it is not possible to check the protection bits yet.
+
+Example:
+
+```
+1: static int measure[255];
+2: int* kernel_secret; // pointer into (unaccessible) kernel memory space
+3: measure[*kernel_secret_pointer % 255];
+```
+Line 3 will generate a segv, since we try to access protected memory. But the load was speculatively performed. By measuring timings for loads from `measure` (in the signal handler) we can recover one byte of kernel memory.
+
+Mitigation: [Page Table Isolation](https://lwn.net/Articles/741878/)
 
 ## Papers
 
@@ -86,3 +118,6 @@ Problem: The transient instructions *are* executed. While at the architectural l
 
 * [Webkit](https://webkit.org/blog/8048/what-spectre-and-meltdown-mean-for-webkit/) array index masking and pointer poisoning.
 * [Firefox](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) disable SharedArrayBuffer and lower timer precision.
+
+* "End users and systems administrators should check with their operating system vendors and system manufacturers, and apply any updates as soon as they are available" [intel](https://web.archive.org/web/20180119041316/https://www.intel.com/content/www/us/en/architecture-and-technology/facts-about-side-channel-analysis-and-intel-products.html)
+* "The latest microcode_ctl and linux-firmware packages from Red Hat do not include resolutions to the CVE-2017-5715 (variant 2) exploit. Red Hat is no longer providing microcode to address Spectre, variant 2, due to instabilities introduced that are causing customer systems to not boot. [...] Customers are advised to contact their silicon vendor to get the latest microcode for their particular processor."[redhat](https://web.archive.org/web/20180119205832/https://access.redhat.com/solutions/3315431?sc_cid=701f2000000tsLNAAY&)
