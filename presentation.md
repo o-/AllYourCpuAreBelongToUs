@@ -48,6 +48,7 @@ int not_telling_you_anything(int* guesses) {
 
 * Colin Percival, BSDCan '05: [Cache Missing for Fun and Profit](http://www.daemonology.net/papers/cachemissing.pdf)
 * Osvik, Shamir, Tromer, RSA '06: [Cache Attacks and Countermeasures: the Case of AES](https://eprint.iacr.org/2005/271.pdf)
+* Yarom, Falkner, USENIX '14: [FLUSH + RELOAD: a High Resolution, Low Noise, L3 Cache Side-Channel Attack](https://eprint.iacr.org/2013/448.pdf)
 
 # Spectre/Meltdown
 
