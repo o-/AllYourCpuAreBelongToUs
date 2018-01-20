@@ -18,7 +18,13 @@
 
 * Colin Percival, BSDCan '05: [Cache Missing for Fun and Profit](http://www.daemonology.net/papers/cachemissing.pdf)
 * Osvik, Shamir, Tromer, RSA '06: [Cache Attacks and Countermeasures: the Case of AES](https://eprint.iacr.org/2005/271.pdf)
+* Qe, Qian, Yarom, Yuval, Cock, David and Heise, Gernot, Journal of Cryptographic Engineering '17 [A Survey of Microarchitectural Timing Attacks
+and Countermeasures on Contemporary Hardware](https://eprint.iacr.org/2016/613.pdf)
+  * Section 4.1 is of special interest, with introductions to the state of the art techniques.
 * Yarom, Falkner, USENIX '14: [FLUSH + RELOAD: a High Resolution, Low Noise, L3 Cache Side-Channel Attack](https://eprint.iacr.org/2013/448.pdf)
+  * [Video and Slides](https://www.usenix.org/node/184416)
+* Disselkoen, Craig, Kohlbrenner, David, Porter, Leo, and Tullsen, Dean, USENIX '17[Prime+Abort: A Timer-Free High-Precision L3 Cache Attack using Intel TSX](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-disselkoen.pdf)
+  * [Video](https://www.usenix.org/node/203659)
 
 ## Spectre and Meltdown References
 
