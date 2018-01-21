@@ -35,7 +35,8 @@ and Countermeasures on Contemporary Hardware](https://eprint.iacr.org/2016/613.p
 
 Previous Work:
 
-* [Jump Over ASLR: Attacking Branch Predictors to Bypass ASLR](http://www.cs.binghamton.edu/~dima/micro16.pdf)
+* MICRO '16: [Jump Over ASLR: Attacking Branch Predictors to Bypass ASLR](http://www.cs.binghamton.edu/~dima/micro16.pdf)
+* Anders Fogh, cyber.wtf, '17: [Negative Result: Reading Kernel Memory From User Mode](https://cyber.wtf/2017/07/28/negative-result-reading-kernel-memory-from-user-mode/)
 
 ### Posts
 
