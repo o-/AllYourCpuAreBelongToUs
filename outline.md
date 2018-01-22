@@ -1,10 +1,10 @@
 ### Side channels   (10')
 
-* maybe for motivation a physical example? (b)
-* Timing based (b)
+* maybe for motivation a physical example? (k)
+* Timing based (k)
 * The Cache hierarchy (k)
 * cache based. flush+reload (k)
-* covert channels (k)
+* (covert channels (k))
 
 ### Microarchitecture Attacks (15')
 
@@ -31,6 +31,5 @@
 
 * Band aids: Index Masking, Retpoline, Degrading Timer (o)
 * Broader attack model? (b)
-* Long-Term Mitigation (k)
 
 ### Discussion (5')
