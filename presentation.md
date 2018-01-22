@@ -55,10 +55,7 @@ CPU stalled to load `x` for several 100 cycles. Branch predictor says, branch to
 
 Problem: The transient instructions *are* executed. While at the architectural level their effects are reverted, we can observe their execution via side channels.
 
-                  -   speculation   -
-                /                     \
-              /                         \
-    transient    -| side channel |->     actual
+![](./img/covert-channels-diagram.png)
 
 (graph from J. Horn, RealWorldCrypto '18)
 
