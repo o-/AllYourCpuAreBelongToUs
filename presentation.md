@@ -1,11 +1,10 @@
-# History of Side Channel Attacks
-
-Slides
+# Spectre and Meltdown
 
 ---
 
+# History of Side Channel Attacks
 
-
+---
 
 ## Simple Timing Attacks
 
@@ -42,9 +41,10 @@ Mitigation: Don't branch on secret values.
 * A cache hit is always faster than fetching the value from the memory. (L1 ~ 44 cycles, Memory > 200 cycles)
 * X86 `clflush` instruction evicts a memory line from all caches.
 
-
+---
 
 ### Sample Probing Method
+
 ```
 t1 = counter(); 
 a = *adrs;
@@ -131,6 +131,10 @@ b += 4                      add rdx, 4
 
 ---
 
+yield
+
+---
+
 The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
 
 <img src="img/covert-channels-diagram.png" width="700px">
@@ -164,13 +168,6 @@ catch:
 
 ---
 
-## Rough classification
-
-* Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
-* Spectre 1: Branch predictor allows transient execution of the wrong branch.
-* Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
-
----
 
 ### Meltdown
 
@@ -260,6 +257,14 @@ measure();
 * Mitigation: Retpoline, Microcode update
 
 (This is not exactly how it works. Need to combine with ideas of [return oriented programming](http://cseweb.ucsd.edu/~hovav/talks/blackhat08.html))
+
+---
+
+## Rough classification
+
+* Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
+* Spectre 1: Branch predictor allows transient execution of the wrong branch.
+* Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
 
 ---
 
