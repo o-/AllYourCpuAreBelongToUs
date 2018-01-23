@@ -1,11 +1,10 @@
-# History of Side Channel Attacks
-
-Slides
+# Spectre and Meltdown
 
 ---
 
+# History of Side Channel Attacks
 
-
+---
 
 ## Simple Timing Attacks
 
@@ -42,9 +41,10 @@ Mitigation: Don't branch on secret values.
 * A cache hit is always faster than fetching the value from the memory. (L1 ~ 44 cycles, Memory > 200 cycles)
 * X86 `clflush` instruction evicts a memory line from all caches.
 
-
+---
 
 ### Sample Probing Method
+
 ```
 t1 = counter(); 
 a = *adrs;
@@ -131,6 +131,10 @@ b += 4                      add rdx, 4
 
 ---
 
+yield
+
+---
+
 The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
 
 <img src="img/covert-channels-diagram.png" width="700px">
@@ -164,13 +168,6 @@ catch:
 
 ---
 
-## Rough classification
-
-* Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
-* Spectre 1: Branch predictor allows transient execution of the wrong branch.
-* Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
-
----
 
 ### Meltdown
 
@@ -205,6 +202,10 @@ Line 3 will generate a segv, since we try to access protected memory. But the lo
 
 ---
 
+yield
+
+---
+
 ### Spectre v1: Bounds Check Bypass
 
 Exploiting code a target process, to execute mispredicted branches.
@@ -212,7 +213,7 @@ Exploiting code a target process, to execute mispredicted branches.
 ```
 static uint8_t offsets = {1,2,3}
 
-function read(char* v, unsigned o) {
+function read(uint8_t* v, unsigned o) {
   if (o < 3) {
     uint8_t i = offsets[o];
     return v[i];
@@ -259,6 +260,14 @@ measure();
 
 ---
 
+## Rough classification
+
+* Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
+* Spectre 1: Branch predictor allows transient execution of the wrong branch.
+* Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
+
+---
+
 # Mitigation
 
 ## Band Aids
@@ -295,6 +304,16 @@ Even if it is (wrongly) speculated that `i < array_size`, we limit the attacker 
 ```
 array[0] ... array[STATIC_UPPER_BOUND]
 ```
+
+---
+
+yield
+
+---
+
+## Attack Surface
+
+open
 
 ---
 
