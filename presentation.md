@@ -1,10 +1,14 @@
 # History of Side Channel Attacks
 
+---
+
 What is a side channel?
 
 ## CPU Side Channels
 
 Inspecting other processes through measuring shared resources.
+
+---
 
 ### Timing Based
 
@@ -29,6 +33,8 @@ This example is [not made up](https://rdist.root.org/2009/05/28/timing-attack-in
 
 Mitigation: Don't branch on secret values.
 
+---
+
 ### Cache Based
 
 ```
@@ -39,44 +45,63 @@ int not_telling_you_anything(int* guesses) {
 }
 ```
 
-<img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="200px">
+<img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="400px">
 
 L3 cache is "transparently" shared among cores.
 A cached load is much faster than getting the value from memory.
 
+---
+
 # Microarchitecture Attacks
 
-A CPU has different kinds of resources. Pipelines are used to execute multiple instructions in parallel.
+---
 
-![](http://static.digitalinternals.com/wp-content/uploads/2009/02/pipelining.png)
+* A CPU has different kinds of resources.
+* Pipeline is used to execute multiple instructions in parallel.
+
+<img src="img/pipelining.png" width="400px">
 
 ---
+
+### Instruction Reordering
 
 More generally, instructions can be reordered, as long as data dependencies are observed.
 
 ```
+
 int a = *x;        mov rax, [rdi]   // load from address in rax
 int b = *y;        mov rdx, [rsi]   // load from address in rdx
     a += 4;        add rax, 4       // add 4 to rax, only depends on instruction 1
+
 ```
 
 ---
 
+### Two tier CPU architecture
+
 Traditionally CPUs would have to wait when registers where reused.
 
 ```
+
 int a = *x;        mov rax, [rdi]   // load into rax
    *x = a;         mov [rdi], rax   // read from rax
-    a = y;         mov rax, rsi     // override rax    <- stall
+    a = y;         mov rax, rsi     // override rax    <- stall?
+
 ```
 
-But nowadays registers are allocated by the CPU on the fly. On the architectural level we still have rax, rdx, rbx, .... But internally they are mapped to any register.
+Nowadays:
 
-![](https://cdn-images-1.medium.com/max/1600/1*xPqqyrbiNO7yrAsu9_VxWw.png)
+* Externally visible registers rax, rdx, rbx, ...
+* Internally: register file, dynamic register allocation
+
+---
+
+### Speculative Execution
 
 But what if controlflow depends on data?
 
 ```
+
 if (*a != 0) {     mov rax, [rax]
                    test rax
                    jz 0xb
@@ -87,7 +112,12 @@ b += 4             add rdx, 4
 ...
 // up to 200 instructions
 ...
+
 ```
+
+---
+
+### Speculative Execution
 
 * Branch predictor predicts a branch target.
 * Execution speculatively follows that branch.
@@ -97,28 +127,49 @@ b += 4             add rdx, 4
 
 But microarchitectural changes to the CPU stay visible!
 
+---
+
+<img src="img/arch.png" width="800px">
+
+---
+
+Speculatively executed instructions can get around security checks.
+
+```
+function use_secret():
+  if (!allowed)
+    throw_error();
+  return public_array[secret];
+
+
+// Attacker:
+try:
+  use_secret()
+catch:
+  secret = flush+reload(public_array);
+```
+
+---
+
 The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
 
-![](./img/covert-channels-diagram.png)
+<img src="img/covert-channels-diagram.png" width="700px">
+
 (graph from J. Horn, RealWorldCrypto '18)
 
-Why? Because speculatively executed instructions can get around security checks.
-
-```
-try:
-  int secret = *secret_ptr;    // <--- segfault, since not allowed to access secret
-  public_array[a];             // <--- transient execution
-catch:
-  int secret = flush+reload(public_array);
-```
+---
 
 # Spectre/Meltdown
+
+---
 
 ## Rough classification
 
 * Meltdown: Speculative memory loads allow execution of transient instructions *after* a segv.
 * Spectre 1: Branch predictor allows transient execution of the wrong branch.
 * Spectre 2: Poisoning the Branch Target Buffer allows transient execution of (more or less) arbitrary code.
+
+---
 
 ### Meltdown
 
@@ -148,63 +199,101 @@ Line 3 will generate a segv, since we try to access protected memory. But the lo
 * Affects: Kernels
 * Mitigation: [Page Table Isolation](https://lwn.net/Articles/741878/)
 
-### Meltdown v1: Bounds Check Bypass
+---
 
-Exploiting code gadgets in a target process, to execute mispredicted branches. Affects programs operating on untrusted programs or data.
+### Spectre v1: Bounds Check Bypass
+
+Exploiting code a target process, to execute mispredicted branches.
 
 ```
-static int offsets = {1,2,3}
+static uint8_t offsets = {1,2,3}
 
-function read(vector<int> v2, unsigned offset) {
-  if (offset < 3) {
-    int i = offsets[offset];
-    return v2[i];
+function read(char* v, unsigned o) {
+  if (o < 3) {
+    uint8_t i = offsets[o];
+    return v[i];
   }
 }
+```
 
+```
 // Attacker:
-vector<int> measure(MAX_INT);
-read(measure, 0x1234 - &offsets);
-int secret = get_index_in_cache(measure);  // value at 0x1234
+uint8_t measure[255];
+read(measure, secret_ptr - &offsets);
+uint8_t secret = get_index_in_cache(measure);
 ```
 
 * Affects: Programs branching on user input
 * Examples: Kernel, JIT, Parser, De-/Serializer, ...
 * Mitigation: Masking, Branchless code, ..., Microcode update
 
-### Meltdown v2: Branch Target Injection
+---
+
+### Spectre v2: Branch Target Injection
 
 Poison the branch predictor for indirect branches. Requires exact knowledge of the branch predictor on a particular architecture. Allows attacking context to seed the predictor such that in `jmp *f` the speculation for the value of `*f` is attacker controlled, thus allowing arbitrary transient code execution.
 
 ```
-// Vulnerable Program
-static void* x = 0x1234;
-
+static void* x = &bar;
 void fun() {
   asm("jmp *%1", r(x));
 }
 ```
+
 ```
 // Attacker:
-int some_code_i_want_to_run = {0x66, ...};
 poison_branch_predictor_with(&some_code_i_want_to_run);
 fun();
 measure();
 ```
 
-Well this is not exactly how it works. The array `some_code_i_want_to_run` is in attacker memory space, so the attacked process will not be able to access (or speculatively execute) it. To make it work, we need to combine with ideas of [return oriented programming](http://cseweb.ucsd.edu/~hovav/talks/blackhat08.html) to execute a sequence of instruction compromised only of instructions already present in the attacked program.
-
 * Affects: Programs using indirect jumps
-* Examples: Hypervisors, Interpreters using threaded code, Code generated by compilers using jump tables, ...
+* Examples: Hypervisors, Threaded code, Jump tables, ...
 * Mitigation: Retpoline, Microcode update
 
-### Meltdown vn
+(This is not exactly how it works. Need to combine with ideas of [return oriented programming](http://cseweb.ucsd.edu/~hovav/talks/blackhat08.html))
 
-Probably more ways to trigger speculation exist and probably more side-channels to exfiltrate data too.
+---
 
-## Mitigation
+# Mitigation
 
-* [Retpoline](https://web.archive.org/web/20180117150153/https://support.google.com/faqs/answer/7625886) removes need for indirect branches.
+## Band Aids
+
+---
+
+### Retpoline
+
+[Retpoline](https://web.archive.org/web/20180117150153/https://support.google.com/faqs/answer/7625886) removes need for indirect branches.
+
+```
+jmp *rax                        call inb
+                          loop: jmp loop           ; trap speculative execution
+                          inb:  mov [rsp], rax     ; override return address
+                                ret                ; jmp to rax
+```
+---
+
+### Array Masking
+
+```
+if (i < array_size)
+    int res = array[i & STATIC_UPPER_BOUND]
+```
+
+The array access translates to
+
+```
+* (&array + (i & STATIC_UPPER_BOUND)*sizeof(int))
+```
+
+Even if it is (wrongly) speculated that `i < array_size`, we limit the attacker readable memory to:
+
+```
+array[0] ... array[STATIC_UPPER_BOUND]
+```
+
+---
+
 * [Webkit](https://webkit.org/blog/8048/what-spectre-and-meltdown-mean-for-webkit/) array index masking and pointer poisoning.
 * [Firefox](https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/) disable SharedArrayBuffer and lower timer precision.
 * [Chromium](https://github.com/v8/v8/wiki/Untrusted-code-mitigations)
