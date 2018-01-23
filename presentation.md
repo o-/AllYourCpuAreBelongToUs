@@ -35,7 +35,17 @@ Mitigation: Don't branch on secret values.
 
 ---
 
-### Cache Based
+### Cache Based Timing Attack: Flush + Reload
+
+
+<img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="400px">
+
+* L3 cache is "transparently" shared among cores.
+* L3 is inclusive: evicting data from L3 implies evicting data from L1 and L2.
+* A cached hit is always faster than fetching the value from the memory. (L1 ~ 44 cycles, Memory > 200 cycles)
+* X86 `clflush` instruction evicts a memory line from all caches.
+
+
 
 ```
 t1 = counter(); 
@@ -45,10 +55,8 @@ clflush(adrs);
 
 ```
 
-<img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="400px">
-
-L3 cache is "transparently" shared among cores.
-A cached load is much faster than getting the value from memory.
+* Targeting a specific cache line leads to a more effective attack.
+* Minimal required assumptions about the runnin processes since LLC is shared by multiple processors.
 
 ---
 
