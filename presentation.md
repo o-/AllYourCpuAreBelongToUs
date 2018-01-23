@@ -1,5 +1,7 @@
 # History of Side Channel Attacks
 
+Slides
+
 ---
 
 
@@ -53,7 +55,7 @@ clflush(adrs);
 
 ### Benefits
 * Targeting specific cache lines leads to a more effective attack.
-* Minimal required assumptions about the runnin processes since LLC is shared by multiple processors.
+* Minimal required assumptions about the running processes since LLC is shared by multiple processors.
 
 ---
 
