@@ -56,22 +56,15 @@ A cached load is much faster than getting the value from memory.
 
 ---
 
-* A CPU has different kinds of resources.
-* Pipeline is used to execute multiple instructions in parallel.
-
-<img src="img/pipelining.png" width="400px">
-
----
-
 ### Instruction Reordering
 
-More generally, instructions can be reordered, as long as data dependencies are observed.
+Instructions can be reordered, as long as data dependencies are observed.
 
 ```
 
-int a = *x;        mov rax, [rdi]   // load from address in rax
-int b = *y;        mov rdx, [rsi]   // load from address in rdx
-    a += 4;        add rax, 4       // add 4 to rax, only depends on instruction 1
+int a  = 4;         mov rax, 4       // store to rax
+int b  = *y;        mov rdx, [rsi]   // load from address in rdx
+    a += 4;         add rax, 4       // add 4 to rax, only depends on instruction 1
 
 ```
 
@@ -83,9 +76,9 @@ Traditionally CPUs would have to wait when registers where reused.
 
 ```
 
-int a = *x;        mov rax, [rdi]   // load into rax
-   *x = a;         mov [rdi], rax   // read from rax
-    a = y;         mov rax, rsi     // override rax    <- stall?
+int a  = *x;        mov rax, [rdi]    // load into rax
+    a += 4;         add rax, 4        // use the value
+    a  = 4;         mov rax, 4        // override rax    <- stall?
 
 ```
 
@@ -102,13 +95,13 @@ But what if controlflow depends on data?
 
 ```
 
-if (*a != 0) {     mov rax, [rax]
-                   test rax
-                   jz 0xb
+if (*a != 0) {              mov rax, [rax]
+                            test rax
+                            jz 0xb
 
-  b += 4           mov rdx, 4
+  b += 4                    mov rdx, 4
 }
-b += 4             add rdx, 4
+b += 4                      add rdx, 4
 ...
 // up to 200 instructions
 ...
@@ -125,13 +118,13 @@ b += 4             add rdx, 4
 * Speculatively executed trace is either retired or rolled back.
 * Rolling back entails e.g. restoring registers, discarding memory stores in the store buffer, etc.
 
-But microarchitectural changes to the CPU stay visible!
-
 ---
 
 <img src="img/arch.png" width="800px">
 
 ---
+
+### Problems Ahead
 
 Speculatively executed instructions can get around security checks.
 
