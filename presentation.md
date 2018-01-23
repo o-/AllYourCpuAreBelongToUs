@@ -50,6 +50,8 @@ A CPU has different kinds of resources. Pipelines are used to execute multiple i
 
 ![](http://static.digitalinternals.com/wp-content/uploads/2009/02/pipelining.png)
 
+---
+
 More generally, instructions can be reordered, as long as data dependencies are observed.
 
 ```
@@ -57,6 +59,8 @@ int a = *x;        mov rax, [rdi]   // load from address in rax
 int b = *y;        mov rdx, [rsi]   // load from address in rdx
     a += 4;        add rax, 4       // add 4 to rax, only depends on instruction 1
 ```
+
+---
 
 Traditionally CPUs would have to wait when registers where reused.
 
