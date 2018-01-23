@@ -52,7 +52,7 @@ t2 = counter();
 clflush(adrs);
 res = (t2-t1) < threshold;
 ```
-In RSA, a sequence a hit of misses translates to a sequence of operations, and consequently to a sequence of bits.
+In RSA, a sequence of hit/misses translates to a sequence of operations, and consequently to a sequence of bits.
 ### Benefits
 * Targeting specific cache lines leads to a more effective attack.
 * Minimal required assumptions about the running processes since LLC is shared by multiple processors.
