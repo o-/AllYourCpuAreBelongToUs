@@ -2,15 +2,10 @@
 
 ---
 
-What is a side channel?
 
-## CPU Side Channels
 
-Inspecting other processes through measuring shared resources.
 
----
-
-### Timing Based
+## Simple Timing Attacks
 
 When programs operate on secret data, a hostile process on the same CPU has many possibilities to observe it. It can measure timings, core utilization, memory access patterns, etc.
 
@@ -35,18 +30,19 @@ Mitigation: Don't branch on secret values.
 
 ---
 
-### Cache Based Timing Attack: Flush + Reload
+## Cache Based Timing Attack: Flush + Reload
 
 
 <img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="400px">
 
 * L3 cache is "transparently" shared among cores.
 * L3 is inclusive: evicting data from L3 implies evicting data from L1 and L2.
-* A cached hit is always faster than fetching the value from the memory. (L1 ~ 44 cycles, Memory > 200 cycles)
+* A cache hit is always faster than fetching the value from the memory. (L1 ~ 44 cycles, Memory > 200 cycles)
 * X86 `clflush` instruction evicts a memory line from all caches.
 
 
 
+### Sample Probing Method
 ```
 t1 = counter(); 
 a = *adrs;
@@ -55,7 +51,8 @@ clflush(adrs);
 
 ```
 
-* Targeting a specific cache line leads to a more effective attack.
+### Benefits
+* Targeting specific cache lines leads to a more effective attack.
 * Minimal required assumptions about the runnin processes since LLC is shared by multiple processors.
 
 ---
