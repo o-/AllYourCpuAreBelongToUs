@@ -27,7 +27,7 @@ bool check_pass(const char* input) {
 
 This example is [not made up](https://rdist.root.org/2009/05/28/timing-attack-in-google-keyczar-library/).
 
-Mitigation: Don't branch on secret values. (On Intel: use CMOV).
+Mitigation: Don't branch on secret values.
 
 ### Cache Based
 
@@ -35,29 +35,80 @@ Mitigation: Don't branch on secret values. (On Intel: use CMOV).
 static uint8_t secret = 42;
 
 int not_telling_you_anything(int* guesses) {
-    int pick = guesses[secret];
-    return pick & 0;
+    return guesses[secret];
 }
 ```
 
-# Spectre/Meltdown
+![](https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png) 
 
-## Speculative Execution
+L3 cache is "transparently" shared among cores.
+A cached load is much faster than getting the value from memory.
+
+# Microarchitecture Attacks
+
+A CPU has different kinds of resources. Pipelines are used to execute multiple instructions in parallel.
+
+![](http://static.digitalinternals.com/wp-content/uploads/2009/02/pipelining.png)
+
+More generally, instructions can be reordered, as long as data dependencies are observed.
 
 ```
-if (*x == 0) {
-  *y = 1
+int a = *x;        mov rax, [rdi]   // load from address in rax
+int b = *y;        mov rdx, [rsi]   // load from address in rdx
+    a += 4;        add rax, 4       // add 4 to rax, only depends on instruction 1
+```
+
+Traditionally CPUs would have to wait when registers where reused.
+
+```
+int a = *x;        mov rax, [rdi]   // load into rax
+   *x = a;         mov [rdi], rax   // read from rax
+    a = y;         mov rax, rsi     // override rax    <- stall
+```
+
+But nowadays registers are allocated by the CPU on the fly. On the architectural level we still have rax, rdx, rbx, .... But internally they are mapped to any register.
+
+![](https://cdn-images-1.medium.com/max/1600/1*xPqqyrbiNO7yrAsu9_VxWw.png)
+
+But what if controlflow depends on data?
+
+```
+if (*a != 0) {     mov rax, [rax]
+                   test rax
+                   jz 0xb
+
+  b += 4           mov rdx, 4
 }
+b += 4             add rdx, 4
+...
+// up to 200 instructions
 ...
 ```
 
-CPU stalled to load `x` for several 100 cycles. Branch predictor says, branch took the then-branch in the past. Solution: follow predicted branch and execute "transiently". If the branch turns out to be mispredicted, throw away transient results. For example `*y = 1` has to be removed from the store buffer.
+* Branch predictor predicts a branch target.
+* Execution speculatively follows that branch.
+* Test result becomes available.
+* Speculatively executed trace is either retired or rolled back.
+* Rolling back entails e.g. restoring registers, discarding memory stores in the store buffer, etc.
 
-Problem: The transient instructions *are* executed. While at the architectural level their effects are reverted, we can observe their execution via side channels.
+But microarchitectural changes to the CPU stay visible!
+
+The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
 
 ![](./img/covert-channels-diagram.png)
-
 (graph from J. Horn, RealWorldCrypto '18)
+
+Why? Because speculatively executed instructions can get around security checks.
+
+```
+try:
+  int secret = *secret_ptr;    // <--- segfault, since not allowed to access secret
+  public_array[a];             // <--- transient execution
+catch:
+  int secret = flush+reload(public_array);
+```
+
+# Spectre/Meltdown
 
 ## Rough classification
 
