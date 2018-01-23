@@ -205,6 +205,10 @@ Line 3 will generate a segv, since we try to access protected memory. But the lo
 
 ---
 
+yield
+
+---
+
 ### Spectre v1: Bounds Check Bypass
 
 Exploiting code a target process, to execute mispredicted branches.
@@ -212,7 +216,7 @@ Exploiting code a target process, to execute mispredicted branches.
 ```
 static uint8_t offsets = {1,2,3}
 
-function read(char* v, unsigned o) {
+function read(uint8_t* v, unsigned o) {
   if (o < 3) {
     uint8_t i = offsets[o];
     return v[i];
@@ -295,6 +299,16 @@ Even if it is (wrongly) speculated that `i < array_size`, we limit the attacker 
 ```
 array[0] ... array[STATIC_UPPER_BOUND]
 ```
+
+---
+
+yield
+
+---
+
+## Attack Surface
+
+open
 
 ---
 
