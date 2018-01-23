@@ -124,6 +124,14 @@ b += 4                      add rdx, 4
 
 ---
 
+The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
+
+<img src="img/covert-channels-diagram.png" width="700px">
+
+(graph from J. Horn, RealWorldCrypto '18)
+
+---
+
 ### Problems Ahead
 
 Speculatively executed instructions can get around security checks.
@@ -144,13 +152,6 @@ catch:
 
 ---
 
-The core idea of spectre/meltdown: Establish a covert channel between speculatively executed instructions and actually executed instruction.
-
-<img src="img/covert-channels-diagram.png" width="700px">
-
-(graph from J. Horn, RealWorldCrypto '18)
-
----
 
 # Spectre/Meltdown
 
@@ -166,14 +167,17 @@ The core idea of spectre/meltdown: Establish a covert channel between speculativ
 
 ### Meltdown
 
-Only affects Intel CPUs.
+* Takes advantage of the [virtual memory pagination](http://www.plantation-productions.com/Webster/www.artofasm.com/Linux/HTML/MemoryArchitecturea3.html).
+* The address space of a process is mapped to virtual pages. This mapping is stored in the Memory Management Unit (MMU)
+* Each process can have its own virtual memory, which means different mappings and different page tables.
+* When switching processes, the OS swaps the page tables in the MMU. This is an expensive operation.
+* A very frequent switching is between the user process and the kernel process (e.g. `syscalls`).
+  * It would be very expensive to swap tables every syscall. Thus, a common optimization is to not have the kernel address space mapped into every processe's address space.
+  * Of course, the kernel page accesses are protected. However...
 
-[Virtual memory](http://www.plantation-productions.com/Webster/www.artofasm.com/Linux/HTML/MemoryArchitecturea3.html) is organized in pages. A page is a continuous region of virtual address space and can be backed by physical memory. Page information is stored in the OS in a tree like structure, called page table tree.
-A page has ACL bits, for example it can be Readable, Writeable, Executable. Pages can also be protected, eg. only accessible to the OS or the sanbox implementation.
+---
 
-Normally every process in a system has it's own virtual memory. When switching between processes the OS loads a different page table to the Memory Management Unit (MMU). However the OS internal memory is traditionally mapped into the process address space, but marked protected. This is to avoid switching the page table (which is expensive) on syscalls.
-
-Translating a virtual memory address to a physical one requires several steps and the loading of several page table entries from memory. For perfomance ther is a Translation Lookaside Buffer (TLB) that remembers recently used mappings. If the page table entry is evicted from memory, but the actual mapping is in the TLB, intel CPUs perform a speculative load, even though it is not possible to check the protection bits yet.
+... We have seen that we can force speculative loads of information, and measure them before exceptions cancel the architectural effects.
 
 Example:
 
@@ -189,7 +193,7 @@ Example:
 ```
 Line 3 will generate a segv, since we try to access protected memory. But the load was speculatively performed. By measuring timings for loads from `measure` (in the signal handler) we can recover one byte of kernel memory.
 
-* Affects: Kernels
+* Affects: Kernels running on Intel CPUs
 * Mitigation: [Page Table Isolation](https://lwn.net/Articles/741878/)
 
 ---
