@@ -39,7 +39,7 @@ int not_telling_you_anything(int* guesses) {
 }
 ```
 
-![](https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png) 
+![](https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png | width = 200px) 
 
 L3 cache is "transparently" shared among cores.
 A cached load is much faster than getting the value from memory.
