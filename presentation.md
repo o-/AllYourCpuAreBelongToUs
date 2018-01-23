@@ -38,11 +38,11 @@ Mitigation: Don't branch on secret values.
 ### Cache Based
 
 ```
-static uint8_t secret = 42;
+t1 = counter(); 
+a = *adrs;
+t2 = counter();
+clflush(adrs);
 
-int not_telling_you_anything(int* guesses) {
-    return guesses[secret];
-}
 ```
 
 <img src="https://cdn-images-1.medium.com/max/1200/1*Su7d0UCcqBSgeYHdpmGRdg.png" width="400px">
